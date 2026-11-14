@@ -1,0 +1,86 @@
+class Category:
+    def __init__(self, name):
+        self.name = name
+        self.ledger = []    
+    def deposit(self, amount, description=""):
+        self.ledger.append({'amount': amount, 'description': description})
+    
+    def withdraw(self, amount, description=""):
+        if self.check_funds(amount):
+            self.ledger.append({'amount': -amount, 'description': description})
+            return True
+        return False
+    
+    def get_balance(self):
+        balance = 0
+        for transaction in self.ledger:
+            balance += transaction['amount']
+        return balance
+
+    def transfer(self, amount, recipient):
+        if self.withdraw(amount, f"Transfer to {recipient.name}"):
+            recipient.deposit(amount, f"Transfer from {self.name}")
+            return True
+        return False
+    
+    def check_funds(self, amount):
+        if amount > self.get_balance():
+            return False
+        return True
+    
+    def __str__(self):
+        title = []
+        title.append(self.name.center(30, "*"))
+        for entry in self.ledger:
+            title.append(f"{entry['description'][:23]:<23}{entry['amount']:>7.2f}")
+        title.append(f"Total: {self.get_balance():.2f}")
+        return "\n".join(title)
+
+
+        
+
+def create_spend_chart(categories):
+    title = []
+    title.append(f"Percentage spent by category")
+    percents = []
+    total = 0
+    individuals = []
+
+    for choice in categories:
+        value_total = 0
+        for check in choice.ledger:
+            if check['amount'] < 0:
+                value_total += check['amount']
+                total += check['amount']
+        individuals.append(value_total)
+    for i in individuals:
+        percents.append(int((i/total)*10)*10)
+
+    for i in range(100, -1, -10):
+        graph = []
+        graph.append(f"{i:>3}|")
+        for p in percents:
+            if p >= i:
+                graph.append(" o ")
+            if p < i:
+                graph.append("   ")
+        graph.append(" ")
+        title.append("".join(graph))
+    bottom = f"    {'---'*len(categories)}-"
+    title.append(bottom)
+    biggest = 0
+    for single in categories:
+        if len(single.name) > biggest:
+            biggest = len(single.name)
+    
+    for i in range(biggest):
+        lists = []
+        lists.append("    ")
+        for single in categories:
+            if len(single.name) > i:
+                lists.append(f" {single.name[i]} ")
+            if len(single.name) <= i:
+                lists.append("   ")
+        lists.append(" ")
+        title.append("".join(lists))
+    return "\n". join(title)
